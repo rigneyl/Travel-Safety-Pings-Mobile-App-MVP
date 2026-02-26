@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Travel Safety Pings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+  <style>
+    :root {
+      --blue-top: #1b7ed6;
+      --blue-bottom: #0452b5;
+      --blue-dark: #00428f;
+      --red-alert: #f44336;
+      --red-alert-dark: #d32f2f;
+      --yellow-alert: #ffc107;
+      --card-bg: #ffffff;
+      --bg: #edf2f7;
+      --text-main: #1a2736;
+      --text-muted: #6b7a8a;
+      --border-soft: #dde3ec;
+      --shadow-soft: 0 6px 18px rgba(15, 30, 60, 0.15);
+      --radius-lg: 18px;
+      --radius-card: 14px;
+      --nav-height: 60px;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+      background: #cfd8e3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .device {
+      width: 360px;
+      max-width: 100%;
+      height: 640px;
+      max-height: 100vh;
+      background: var(--bg);
+      border-radius: 32px;
+      box-shadow: 0 20px 55px rgba(8, 21, 44, 0.55);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ONBOARDING / HOME */
+
+    .hero-header {
+      position: relative;
+      padding: 28px 20px 18px;
+      background: linear-gradient(180deg, var(--blue-top), var(--blue-bottom));
+      color: #ffffff;
+    }
+
+    .hero-header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.3) 0, transparent 45%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .hero-logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-logo-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue-bottom);
+      font-size: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-logo-title {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-logo-subtitle {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .hero-body {
+      display: flex;
+      gap: 12px;
+    }
+
+    .hero-text {
+      flex: 1;
+    }
+
+    .hero-headline {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .hero-tagline {
+      font-size: 13px;
+      opacity: 0.94;
+      line-height: 1.4;
+    }
+
+    .hero-illustration {
+      width: 110px;
+      border-radius: 20px 20px 0 0;
+      background: linear-gradient(180deg, #7bd5ff, #ffffff);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-illustration-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px 12px;
+      background: linear-gradient(180deg, rgba(132, 210, 255, 0.7), rgba(0, 125, 190, 0.95));
+    }
+
+    .hero-illustration-inner::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: -18px;
+      width: 110%;
+      height: 55%;
+      background:
+        radial-gradient(circle at 10% 10%, #ffffff 0, transparent 55%),
+        radial-gradient(circle at 90% 0, rgba(255, 255, 255, 0.9) 0, transparent 55%);
+      opacity: 0.9;
+    }
+
+    .hero-hiker {
+      position: relative;
+      z-index: 1;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 20%, #ffd399 0, #f2a45a 35%, #4c2a17 36%, #162842 75%);
+      margin: 0 auto 6px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .hero-cityline {
+      position: relative;
+      z-index: 1;
+      height: 26px;
+      border-radius: 12px;
+      background:
+        linear-gradient(90deg, #f5f5f5 0, #fff6e0 20%, #e4f3ff 40%, #fff2f0 60%, #eaf7ff 80%, #f9f5ff 100%);
+    }
+
+    .hero-cta {
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 40px;
+      font-size: 15px;
+      font-weight: 600;
+      background: linear-gradient(180deg, #ffffff, #e6f0ff);
+      color: var(--blue-dark);
+      box-shadow: 0 8px 18px rgba(1, 48, 121, 0.5);
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 10px rgba(1, 48, 121, 0.35);
+    }
+
+    .hero-footer {
+      padding: 12px 20px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f5f8fd;
+      border-top: 1px solid #d6e2f3;
+    }
+
+    /* GENERIC TOP BAR */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px 10px;
+      background: linear-gradient(180deg, var(--blue-top), var(--blue-bottom));
+      color: #ffffff;
+    }
+
+    .topbar-title {
+      flex: 1;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .topbar-back {
+      width: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .topbar-back.invisible {
+      visibility: hidden;
+    }
+
+    /* CONTENT AREA */
+
+    .content {
+      flex: 1;
+      padding: 12px 16px;
+      overflow-y: auto;
+    }
+
+    /* ALERTS LIST */
+
+    .alerts-header-text {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .alerts-header-city {
+      font-weight: 600;
+    }
+
+    .alert-card {
+      border-radius: var(--radius-card);
+      background: var(--red-alert);
+      color: #ffffff;
+      padding: 10px 12px 10px;
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .alert-card.alert-yellow {
+      background: #fff8e1;
+      border: 1px solid #ffe08a;
+      color: var(--text-main);
+    }
+
+    .alert-icon-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .alert-icon-circle.yellow {
+      background: #fff3cd;
+      color: #ff9800;
+    }
+
+    .alert-text {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .alert-subtitle {
+      font-size: 12px;
+      opacity: 0.96;
+    }
+
+    .alert-cta {
+      margin-left: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .btn-details {
+      border-radius: 999px;
+      border: none;
+      background: #ffffff;
+      color: var(--blue-dark);
+      font-size: 11px;
+      padding: 6px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+      white-space: nowrap;
+    }
+
+    .alert-card.alert-yellow .btn-details {
+      background: #ffffff;
+      color: var(--blue-dark);
+    }
+
+    /* ALERT DETAIL */
+
+    .detail-image {
+      height: 160px;
+      background: url("https://images.unsplash.com/photo-1596495578065-8a3d4c2521c8?auto=format&fit=crop&w=800&q=80")
+        center/cover no-repeat;
+    }
+
+    .detail-card {
+      margin-top: -18px;
+      background: #ffffff;
+      border-radius: 22px 22px 0 0;
+      padding: 16px 18px 20px;
+      box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.12);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--text-main);
+    }
+
+    .detail-location {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .detail-body {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .detail-list-title {
+      font-weight: 600;
+      font-size: 13px;
+      margin: 6px 0 4px;
+    }
+
+    .bullet-list {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .bullet-list li {
+      margin-bottom: 4px;
+    }
+
+    .detail-footer-btn {
+      margin-top: auto;
+      padding-top: 14px;
+    }
+
+    .btn-more {
+      width: 100%;
+      border-radius: 999px;
+      border: none;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--blue-dark);
+      color: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(9, 25, 65, 0.5);
+    }
+
+    /* TIPS & SCAMS */
+
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tip-card {
+      border-radius: var(--radius-card);
+      background: #ffffff;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .tip-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e7f1ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      color: var(--blue-dark);
+    }
+
+    .tip-text-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .tip-text-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .btn-emergency {
+      margin-top: 14px;
+      width: 100%;
+      border-radius: 999px;
+      border: none;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      background: #f44336;
+      color: #ffffff;
+      box-shadow: 0 8px 18px rgba(244, 67, 54, 0.45);
+      cursor: pointer;
+    }
+
+    /* PROFILE PLACEHOLDER */
+
+    .profile-placeholder {
+      padding-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* BOTTOM NAV */
+
+    .bottom-nav {
+      height: var(--nav-height);
+      border-top: 1px solid #d3dfef;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .nav-item {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      gap: 2px;
+    }
+
+    .nav-icon {
+      font-size: 18px;
+    }
+
+    .nav-item.active {
+      color: var(--blue-dark);
+      font-weight: 600;
+    }
+
+    .nav-item.active::after {
+      content: "";
+      width: 58%;
+      height: 3px;
+      border-radius: 999px;
+      background: var(--blue-dark);
+      position: relative;
+      top: 2px;
+    }
+
+    /* SMALL UTILITIES */
+
+    .link-like {
+      color: #ffffff;
+      text-decoration: underline;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="device">
+    <!-- HOME / GET STARTED -->
+    <section class="screen active" id="screen-home">
+      <div class="hero-header">
+        <div class="hero-inner">
+          <div class="hero-logo-row">
+            <div class="hero-logo-icon">📍</div>
+            <div class="hero-logo-text">
+              <div class="hero-logo-title">Travel Safety Pings</div>
+              <div class="hero-logo-subtitle">Local alerts for weather, unrest & scams</div>
+            </div>
+          </div>
+
+          <div class="hero-body">
+            <div class="hero-text">
+              <div class="hero-headline">Stay Informed on the Go</div>
+              <div class="hero-tagline">
+                Get early warnings for severe weather, protests, and tourist scams at your destination.
+              </div>
+            </div>
+
+            <div class="hero-illustration">
+              <div class="hero-illustration-inner">
+                <div class="hero-hiker"></div>
+                <div class="hero-cityline"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-cta">
+            <button class="btn-primary" id="btn-get-started">Get Started</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-footer">
+        Local data is demo-only in this prototype. In production, alerts would be powered by live feeds and verified
+        sources.
+      </div>
+    </section>
+
+    <!-- ALERTS LIST -->
+    <section class="screen" id="screen-alerts">
+      <header class="topbar">
+        <div class="topbar-back invisible"></div>
+        <div class="topbar-title">Alerts for Tokyo, Japan</div>
+        <div style="width:26px;"></div>
+      </header>
+      <div class="content">
+        <div class="alerts-header-text">
+          Today’s alerts for <span class="alerts-header-city">Tokyo</span>. Tap <strong>Details</strong> to see what to
+          do.
+        </div>
+
+        <!-- Severe storm -->
+        <div class="alert-card" data-alert-id="storm">
+          <div class="alert-icon-circle">⛈️</div>
+          <div class="alert-text">
+            <div class="alert-title">Severe Storm Warning</div>
+            <div class="alert-subtitle">
+              Heavy rain and strong winds expected today. Avoid outdoor activities.
+            </div>
+          </div>
+          <div class="alert-cta">
+            <button class="btn-details">Details ›</button>
+          </div>
+        </div>
+
+        <!-- Protest -->
+        <div class="alert-card" data-alert-id="protest">
+          <div class="alert-icon-circle">⚠️</div>
+          <div class="alert-text">
+            <div class="alert-title">Protest Advisory</div>
+            <div class="alert-subtitle">
+              Demonstrations in the Shibuya area. Expect traffic delays and crowds.
+            </div>
+          </div>
+          <div class="alert-cta">
+            <button class="btn-details">Details ›</button>
+          </div>
+        </div>
+
+        <!-- Tourist scam -->
+        <div class="alert-card alert-yellow" data-alert-id="scam">
+          <div class="alert-icon-circle yellow">🎭</div>
+          <div class="alert-text">
+            <div class="alert-title">Tourist Scam Alert</div>
+            <div class="alert-subtitle">
+              Beware of fake ticket scams near popular attractions and train stations.
+            </div>
+          </div>
+          <div class="alert-cta">
+            <button class="btn-details">Details ›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALERT DETAIL (Protest Advisory example) -->
+    <section class="screen" id="screen-alert-detail">
+      <div class="detail-image"></div>
+      <div class="detail-card">
+        <div class="detail-title" id="detail-title">Protest Advisory</div>
+        <div class="detail-location" id="detail-location">Demonstrations reported in Shibuya</div>
+
+        <div class="detail-body" id="detail-body">
+          Large crowds are expected in the area today. There is potential for traffic delays, noisy demonstrations, and a
+          heightened police presence.
+        </div>
+
+        <div class="detail-list-title">Recommended actions:</div>
+        <ul class="bullet-list" id="detail-actions">
+          <li>Avoid the Shibuya district after 4pm if possible.</li>
+          <li>Stay in well-lit, busy areas and keep valuables secure.</li>
+          <li>Follow local news or official alerts for updates.</li>
+        </ul>
+
+        <div class="detail-footer-btn">
+          <button class="btn-more" id="btn-back-to-alerts">‹ Back to Alerts</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIPS & SCAMS -->
+    <section class="screen" id="screen-tips">
+      <header class="topbar">
+        <div class="topbar-back invisible"></div>
+        <div class="topbar-title">Safety Tips & Scams</div>
+        <div style="width:26px;"></div>
+      </header>
+      <div class="content">
+        <div class="tips-list">
+          <div class="tip-card">
+            <div class="tip-icon">☔</div>
+            <div>
+              <div class="tip-text-title">Weather Safety</div>
+              <div class="tip-text-sub">How to handle severe rain, wind, and heat safely.</div>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🚫</div>
+            <div>
+              <div class="tip-text-title">Avoiding Protests</div>
+              <div class="tip-text-sub">Staying aware and out of the way during demonstrations.</div>
+            </div>
+          </div>
+
+          <div class="tip-card">
+            <div class="tip-icon">🕵️‍♂️</div>
+            <div>
+              <div class="tip-text-title">Tourist Scam Alerts</div>
+              <div class="tip-text-sub">Common scams and red flags to watch for near attractions.</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-emergency" id="btn-emergency-contacts">Emergency Contacts ›</button>
+
+        <div class="center" style="margin-top:8px; font-size:11px; color:var(--text-muted);">
+          In a real app this would show country-specific emergency numbers.
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE PLACEHOLDER -->
+    <section class="screen" id="screen-profile">
+      <header class="topbar">
+        <div class="topbar-back invisible"></div>
+        <div class="topbar-title">Profile</div>
+        <div style="width:26px;"></div>
+      </header>
+      <div class="content">
+        <div class="profile-placeholder">
+          Profile & preferences would live here.<br />
+          In this prototype the focus is on the alerts and tips experience.
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" data-target="home">
+        <div class="nav-icon">🏠</div>
+        <div>Home</div>
+      </div>
+      <div class="nav-item" data-target="alerts">
+        <div class="nav-icon">🔔</div>
+        <div>Alerts</div>
+      </div>
+      <div class="nav-item" data-target="tips">
+        <div class="nav-icon">📚</div>
+        <div>Tips</div>
+      </div>
+      <div class="nav-item" data-target="profile">
+        <div class="nav-icon">👤</div>
+        <div>Profile</div>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    // Simple state for which screen is active
+    const screens = {
+      home: document.getElementById("screen-home"),
+      alerts: document.getElementById("screen-alerts"),
+      detail: document.getElementById("screen-alert-detail"),
+      tips: document.getElementById("screen-tips"),
+      profile: document.getElementById("screen-profile")
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach((s) => s.classList.remove("active"));
+      if (screens[name]) screens[name].classList.add("active");
+    }
+
+    // Bottom nav
+    const navItems = document.querySelectorAll(".nav-item");
+    navItems.forEach((item) => {
+      item.addEventListener("click", () => {
+        navItems.forEach((i) => i.classList.remove("active"));
+        item.classList.add("active");
+        const target = item.getAttribute("data-target");
+        if (target === "home") showScreen("home");
+        if (target === "alerts") showScreen("alerts");
+        if (target === "tips") showScreen("tips");
+        if (target === "profile") showScreen("profile");
+      });
+    });
+
+    // Get Started -> Alerts
+    document.getElementById("btn-get-started").addEventListener("click", () => {
+      // select Alerts tab
+      navItems.forEach((i) => i.classList.remove("active"));
+      document.querySelector('.nav-item[data-target="alerts"]').classList.add("active");
+      showScreen("alerts");
+    });
+
+    // Alert cards -> detail screen
+    const alertDemoContent = {
+      storm: {
+        title: "Severe Storm Warning",
+        location: "Heavy rain & high winds across Tokyo",
+        body:
+          "Strong winds and intense rainfall are expected through the afternoon and evening. Localized flooding and transport delays are likely.",
+        actions: [
+          "Postpone non-essential outdoor activities.",
+          "Secure loose items on balconies or rooftops.",
+          "Carry a waterproof layer and keep electronics protected."
+        ]
+      },
+      protest: {
+        title: "Protest Advisory",
+        location: "Demonstrations reported in Shibuya",
+        body:
+          "Large crowds are expected in the area. Expect traffic delays, loud noise, and a visible police presence throughout the day.",
+        actions: [
+          "Avoid the Shibuya district after 4pm if possible.",
+          "Use alternate stations or exits to bypass large crowds.",
+          "Follow local news or metro announcements for route changes."
+        ]
+      },
+      scam: {
+        title: "Tourist Scam Alert",
+        location: "Ticket scams near major attractions",
+        body:
+          "Scammers may offer discounted or 'fast-track' tickets that are fake or invalid. They often approach tourists near ticket lines.",
+        actions: [
+          "Buy tickets only from official counters or trusted websites.",
+          "Be wary of anyone insisting you must act 'right now'.",
+          "If unsure, ask staff inside the venue to verify tickets."
+        ]
+      }
+    };
+
+    function openAlertDetail(id) {
+      const data = alertDemoContent[id] || alertDemoContent.protest;
+      document.getElementById("detail-title").textContent = data.title;
+      document.getElementById("detail-location").textContent = data.location;
+      document.getElementById("detail-body").textContent = data.body;
+
+      const list = document.getElementById("detail-actions");
+      list.innerHTML = "";
+      data.actions.forEach((a) => {
+        const li = document.createElement("li");
+        li.textContent = a;
+        list.appendChild(li);
+      });
+
+      showScreen("detail");
+    }
+
+    document.querySelectorAll(".alert-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const id = card.getAttribute("data-alert-id");
+        openAlertDetail(id);
+      });
+      card.querySelector(".btn-details").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = card.getAttribute("data-alert-id");
+        openAlertDetail(id);
+      });
+    });
+
+    // back from detail to alerts
+    document.getElementById("btn-back-to-alerts").addEventListener("click", () => {
+      showScreen("alerts");
+    });
+
+    // Emergency Contacts button (for now just alerts the user)
+    document.getElementById("btn-emergency-contacts").addEventListener("click", () => {
+      alert("Demo: Here you’d show local emergency numbers (police, ambulance, embassy hotline, etc.).");
+    });
+  </script>
+</body>
+</html>

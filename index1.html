@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Travel Safety Pings — MVP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+  <!-- Leaflet for Maps -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <style>
+    :root {
+      --bg: #050b10;
+      --bg-soft: #0c1822;
+      --bg-card: #0f2233;
+      --accent: #ffb400;
+      --accent-soft: rgba(255, 180, 0, 0.15);
+      --danger: #ff4e4e;
+      --danger-soft: rgba(255, 78, 78, 0.15);
+      --success: #27c281;
+      --success-soft: rgba(39, 194, 129, 0.15);
+      --text: #f5f7f9;
+      --muted: #9ca8b5;
+      --border-subtle: #1a2b3a;
+      --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.45);
+      --radius-lg: 16px;
+      --radius-full: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif;
+      background: radial-gradient(circle at top, #131f2d 0, #050b10 60%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, rgba(9, 18, 28, 0.95), rgba(3, 8, 12, 0.98));
+      position: relative;
+      box-shadow: var(--shadow-soft);
+    }
+
+    header.app-header {
+      padding: 14px 16px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(12px);
+      background: linear-gradient(180deg, rgba(10, 22, 34, 0.95), rgba(9, 16, 25, 0.85));
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background:
+        radial-gradient(circle at 20% 0, #ffdd99 0, transparent 55%),
+        radial-gradient(circle at 80% 100%, #ff7d5c 0, transparent 55%),
+        radial-gradient(circle at 50% 50%, #102538 0, #050b10 70%);
+      position: relative;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 6px 18px rgba(0, 0, 0, 0.7);
+    }
+
+    .brand-logo::before {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border-radius: 7px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-top-color: transparent;
+      border-left-color: transparent;
+      transform: rotate(35deg);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .header-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(8, 31, 48, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 11px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #18c98c;
+      box-shadow: 0 0 0 5px rgba(24, 201, 140, 0.19);
+    }
+
+    main {
+      padding: 8px 10px 80px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.06) 0, rgba(255, 255, 255, 0.01) 45%, transparent 70%),
+        radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.9) 0, rgba(3, 6, 10, 0.9) 60%);
+      border-radius: var(--radius-lg);
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      margin-bottom: 10px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #dbe6f2;
+    }
+
+    .pill {
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(9, 18, 28, 0.9);
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 2px;
+      margin-bottom: 4px;
+    }
+
+    .status-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 3px solid transparent;
+      background:
+        conic-gradient(from 220deg, var(--danger) 0, var(--accent) 35%, var(--success) 65%, #1a3a60 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .status-badge-inner {
+      position: absolute;
+      inset: 4px;
+      border-radius: inherit;
+      background: radial-gradient(circle at 30% 0, rgba(255, 255, 255, 0.2) 0, transparent 40%), #050b10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .status-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .status-text strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .chip {
+      padding: 4px 8px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      color: var(--muted);
+      background: rgba(9, 18, 28, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chip-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .location-select-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      background: rgba(5, 10, 18, 0.95);
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      padding: 7px 12px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    textarea {
+      border-radius: 12px;
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(255, 180, 0, 0.2);
+      background: rgba(5, 10, 18, 0.98);
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #ffb400, #ff7f3f);
+      color: #101215;
+      box-shadow: 0 8px 20px rgba(255, 180, 0, 0.35);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+      box-shadow: 0 10px 22px rgba(255, 180, 0, 0.45);
+    }
+
+    .btn-ghost {
+      background: rgba(8, 15, 24, 0.9);
+      color: var(--muted);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: none;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .text-subtle {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 6px 0 0;
+    }
+
+    .list li {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .list li::before {
+      content: "•";
+      color: var(--accent);
+      font-size: 14px;
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+      margin: 6px 0;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #dbe6f2;
+    }
+
+    .flex-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(13, 24, 34, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+    }
+
+    .tag-pill.risk-low {
+      border-color: rgba(39, 194, 129, 0.4);
+      background: var(--success-soft);
+      color: #aef4d1;
+    }
+
+    .tag-pill.risk-med {
+      border-color: rgba(255, 180, 0, 0.6);
+      background: var(--accent-soft);
+      color: #ffe5aa;
+    }
+
+    .tag-pill.risk-high {
+      border-color: rgba(255, 78, 78, 0.7);
+      background: var(--danger-soft);
+      color: #ffc1c1;
+    }
+
+    .dest-card {
+      border-radius: 13px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.05) 0, transparent 55%), rgba(7, 16, 24, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 8px 10px;
+      margin-bottom: 6px;
+    }
+
+    .dest-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .dest-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .dest-country {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .bottom-nav {
+      position: sticky;
+      bottom: 0;
+      z-index: 30;
+      padding: 6px 10px 10px;
+      background: linear-gradient(180deg, rgba(4, 9, 14, 0.95), rgba(1, 2, 4, 1));
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px;
+      background: radial-gradient(circle at top, rgba(255, 255, 255, 0.07) 0, rgba(3, 8, 13, 1) 65%);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+    }
+
+    .nav-btn {
+      flex: 1;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 6px 4px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+    }
+
+    .nav-btn span.icon {
+      font-size: 16px;
+    }
+
+    .nav-btn.active {
+      color: var(--text);
+      background: radial-gradient(circle at top, rgba(255, 180, 0, 0.2) 0, rgba(10, 20, 30, 0.9) 70%);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .nav-btn.active::before {
+      content: "";
+      position: absolute;
+      top: -4px;
+      width: 32px;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ffb400, #ff7f3f);
+      opacity: 0.9;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #ff7f3f;
+      position: absolute;
+      top: 4px;
+      right: 18%;
+      box-shadow: 0 0 0 3px rgba(255, 127, 63, 0.25);
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 40;
+      max-width: 460px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120%);
+      top: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255, 78, 78, 0.95), rgba(255, 180, 0, 0.98));
+      color: #101115;
+      font-size: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .toast-body {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .toast-icon {
+      font-size: 16px;
+      margin-top: 1px;
+    }
+
+    .badge {
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .badge-weather {
+      background: rgba(40, 142, 255, 0.2);
+      border-color: rgba(40, 142, 255, 0.5);
+    }
+
+    .badge-unrest {
+      background: rgba(255, 78, 78, 0.2);
+      border-color: rgba(255, 78, 78, 0.5);
+    }
+
+    .badge-scam {
+      background: rgba(255, 180, 0, 0.2);
+      border-color: rgba(255, 180, 0, 0.5);
+    }
+
+    .badge-crime {
+      background: rgba(255, 127, 63, 0.2);
+      border-color: rgba(255, 127, 63, 0.5);
+    }
+
+    #map {
+      width: 100%;
+      height: 320px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .map-card-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .micro-report {
+      padding: 5px 8px;
+      border-radius: 10px;
+      background: rgba(4, 11, 18, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .micro-report time {
+      font-size: 10px;
+      opacity: 0.7;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .store-plan {
+      padding: 8px 10px;
+      border-radius: 13px;
+      background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.08) 0, transparent 55%),
+        rgba(5, 11, 18, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 8px;
+    }
+
+    .store-plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .store-plan-title {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .store-price {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffcf76;
+    }
+
+    .store-pill {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 127, 63, 0.15);
+      border: 1px solid rgba(255, 180, 0, 0.7);
+      color: #ffd799;
+    }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .toggle {
+      width: 34px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(60, 72, 90, 0.9);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .toggle-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #f9fafb;
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      transition: transform 0.15s ease;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 3px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .toggle.active {
+      background: linear-gradient(135deg, #18c98c, #3be9c0);
+    }
+
+    .toggle.active .toggle-thumb {
+      transform: translateX(14px);
+    }
+
+    @media (max-width: 380px) {
+      .brand-subtitle {
+        display: none;
+      }
+      .header-pill {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast">
+    <div class="toast-icon">⚠️</div>
+    <div>
+      <div class="toast-title" id="toast-title">Alert</div>
+      <div class="toast-body" id="toast-body">Details</div>
+    </div>
+  </div>
+
+  <div class="app">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo"></div>
+        <div class="brand-text">
+          <div class="brand-title">Travel Safety Pings</div>
+          <div class="brand-subtitle">On-the-ground risk radar</div>
+        </div>
+      </div>
+      <div class="header-pill">
+        <div class="header-pill-dot"></div>
+        Live alerts
+      </div>
+    </header>
+
+    <main>
+      <!-- DASHBOARD -->
+      <section class="screen active" id="screen-dashboard">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Today’s Safety Snapshot</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              <span id="current-location-label">Loading…</span>
+            </div>
+          </div>
+
+          <div class="status-row">
+            <div class="status-main">
+              <div class="status-badge">
+                <div class="status-badge-inner" id="current-risk-score">--</div>
+              </div>
+              <div class="status-text" id="status-text">
+                <strong>Calibrating risk…</strong>
+              </div>
+            </div>
+            <button class="btn btn-sm" id="btn-test-alert">Test Ping</button>
+          </div>
+
+          <div class="location-select-row">
+            <select id="select-current-destination"></select>
+          </div>
+
+          <div class="chip-row" id="chip-alert-types">
+            <!-- dynamic chips -->
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <div class="section-title">What to watch out for today</div>
+            <ul class="list" id="daily-brief-list">
+              <!-- dynamic -->
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Active Alerts</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Live feed
+            </div>
+          </div>
+          <ul class="list" id="active-alerts-list"></ul>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Quick Actions</div>
+          </div>
+          <div class="flex-row">
+            <button class="btn btn-sm btn-ghost" data-nav="destinations">Manage Destinations</button>
+            <button class="btn btn-sm btn-ghost" data-nav="map">Route safety check</button>
+            <button class="btn btn-sm btn-ghost" data-nav="store">Unlock Pro</button>
+          </div>
+          <div class="hint">
+            This MVP uses demo data and stores your micro-reports & offline cache in your browser only.
+          </div>
+        </div>
+      </section>
+
+      <!-- DESTINATIONS -->
+      <section class="screen" id="screen-destinations">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Add Destination</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Upcoming trips
+            </div>
+          </div>
+          <div class="flex-row">
+            <input id="input-city" placeholder="City (e.g. Bangkok)" />
+          </div>
+          <div class="flex-row" style="margin-top:4px;">
+            <input id="input-country" placeholder="Country (e.g. Thailand)" />
+          </div>
+          <div class="flex-row" style="margin-top:4px;">
+            <input id="input-risk" placeholder="Risk score 0–100 (optional)" />
+          </div>
+          <div class="flex-row" style="margin-top:4px;">
+            <input id="input-lat" placeholder="Latitude (optional, for map)" />
+            <input id="input-lng" placeholder="Longitude (optional, for map)" />
+          </div>
+          <div class="flex-between" style="margin-top:6px;">
+            <button class="btn btn-sm" id="btn-add-destination">Add</button>
+            <div class="text-subtle">You can leave coordinates blank for quick planning.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Tracked Destinations</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Risk overview
+            </div>
+          </div>
+          <div id="destinations-list"></div>
+        </div>
+
+        <div class="card" id="destination-detail-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title" id="detail-title">Destination detail</div>
+            <span class="tag-pill" id="detail-risk-pill">Risk</span>
+          </div>
+          <div class="text-subtle" id="detail-brief"></div>
+          <div class="divider"></div>
+
+          <div>
+            <div class="section-title">Cheat sheet</div>
+            <ul class="list" id="detail-cheats"></ul>
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <div class="section-title">Emergency numbers</div>
+            <ul class="list" id="detail-emergency"></ul>
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <div class="section-title">Local micro-reports</div>
+            <div id="detail-micro-reports"></div>
+            <textarea id="input-micro-report" placeholder="Add a quick note: taxi scam, sketchy ATM…"></textarea>
+            <div class="flex-between" style="margin-top:4px;">
+              <button class="btn btn-sm" id="btn-add-micro-report">Post report</button>
+              <div class="text-subtle">Stored locally, not shared with a server.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MAP & ROUTE SAFETY -->
+      <section class="screen" id="screen-map">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Route Safety Check</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Experimental
+            </div>
+          </div>
+          <div class="map-card-inner">
+            <div class="flex-row">
+              <select id="route-start"></select>
+              <select id="route-end"></select>
+            </div>
+            <button class="btn btn-sm" id="btn-check-route">Check route</button>
+            <div class="text-subtle" id="route-summary">Select a start and end to evaluate route risk.</div>
+            <div id="map"></div>
+            <div class="hint">
+              This uses simple demo data and draws a straight line between city coordinates on top of OpenStreetMap tiles via Leaflet.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORE / MONETIZATION -->
+      <section class="screen" id="screen-store">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Plans</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Freemium
+            </div>
+          </div>
+
+          <div class="store-plan">
+            <div class="store-plan-header">
+              <div>
+                <div class="store-plan-title">Free Tier</div>
+                <div class="text-subtle">Core alerts for one destination at a time.</div>
+              </div>
+              <div class="store-price">$0</div>
+            </div>
+            <ul class="list">
+              <li>Weather + unrest + scam warnings</li>
+              <li>Daily brief for 1 city</li>
+              <li>Local micro-reports (local storage)</li>
+            </ul>
+            <button class="btn btn-sm btn-ghost" disabled>Current plan</button>
+          </div>
+
+          <div class="store-plan">
+            <div class="store-plan-header">
+              <div>
+                <div class="store-plan-title">Pro Alerts</div>
+                <div class="text-subtle">For nomads and frequent flyers.</div>
+              </div>
+              <div class="store-price">$2.99 / mo</div>
+            </div>
+            <div class="flex-row" style="margin-bottom:3px;">
+              <span class="store-pill">Subscription</span>
+            </div>
+            <ul class="list">
+              <li>Multi-city tracking & route safety checks</li>
+              <li>Advanced alerts & early-signal detection</li>
+              <li>Downloadable PDF city safety packs</li>
+            </ul>
+            <button class="btn btn-sm" disabled>Mock purchase (demo)</button>
+          </div>
+
+          <div class="store-plan">
+            <div class="store-plan-header">
+              <div>
+                <div class="store-plan-title">City Safety Packs</div>
+                <div class="text-subtle">Micro-products you can sell separately.</div>
+              </div>
+              <div class="store-price">$7–$19</div>
+            </div>
+            <ul class="list">
+              <li>Top 10 scams, safe areas, red flag behaviors</li>
+              <li>Printable cheat-sheets & packing checklists</li>
+            </ul>
+            <button class="btn btn-sm btn-ghost" disabled>View sample PDF</button>
+          </div>
+
+          <div class="store-plan">
+            <div class="store-plan-header">
+              <div>
+                <div class="store-plan-title">Affiliate Boosters</div>
+                <div class="text-subtle">VPNs, travel insurance, eSIMs.</div>
+              </div>
+            </div>
+            <ul class="list">
+              <li>Link out to partners from alerts & cheat-sheets</li>
+              <li>Track clicks / conversions (not implemented in MVP)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS / OFFLINE -->
+      <section class="screen" id="screen-settings">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Alerts & Notifications</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Noise control
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">Weather alerts</div>
+            <div class="toggle active" data-toggle="weather">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">Unrest / protests</div>
+            <div class="toggle active" data-toggle="unrest">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">Crime spikes</div>
+            <div class="toggle active" data-toggle="crime">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-label">Scam warnings</div>
+            <div class="toggle active" data-toggle="scam">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Offline Cache</div>
+            <div class="pill">
+              <span class="pill-dot"></span>
+              Plane mode
+            </div>
+          </div>
+          <div class="text-subtle">
+            Save the current demo alerts so you still see something useful when you’re offline. This uses your browser’s
+            localStorage only.
+          </div>
+          <div class="flex-between" style="margin-top:6px;">
+            <button class="btn btn-sm btn-ghost" id="btn-save-offline">Save current alerts</button>
+            <button class="btn btn-sm btn-ghost" id="btn-clear-offline">Clear offline data</button>
+          </div>
+          <div class="toggle-row" style="margin-top:6px;">
+            <div class="toggle-label">Use offline cached warnings</div>
+            <div class="toggle" id="toggle-offline-mode">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+          <div class="hint" id="offline-status">Offline cache: not saved yet.</div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="nav-inner">
+        <button class="nav-btn active" data-target="dashboard">
+          <span class="icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-target="destinations">
+          <span class="icon">📍</span>
+          <span>Destinations</span>
+        </button>
+        <button class="nav-btn" data-target="map">
+          <span class="icon">🗺️</span>
+          <span>Map</span>
+          <div class="badge-dot" id="map-badge" style="display:none;"></div>
+        </button>
+        <button class="nav-btn" data-target="store">
+          <span class="icon">💳</span>
+          <span>Store</span>
+        </button>
+        <button class="nav-btn" data-target="settings">
+          <span class="icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    // ------------------ DEMO DATA ------------------
+
+    const demoDestinations = [
+      {
+        id: "bangkok-th",
+        city: "Bangkok",
+        country: "Thailand",
+        riskScore: 64,
+        lat: 13.7563,
+        lng: 100.5018,
+        dailyBrief: [
+          "Common tuk-tuk + gem shop scam near tourist hubs.",
+          "Heavy evening traffic; avoid late-night solo alley walks.",
+          "Watch for ATM skimmers in nightlife districts."
+        ],
+        alerts: [
+          {
+            id: "al1",
+            type: "scam",
+            title: "Taxi meter refusal",
+            message: "Reports of taxis near the main station refusing meters.",
+            severity: "medium"
+          },
+          {
+            id: "al2",
+            type: "weather",
+            title: "Afternoon storms",
+            message: "Heavy rain expected between 3–6pm; minor flooding possible.",
+            severity: "low"
+          },
+          {
+            id: "al3",
+            type: "crime",
+            title: "Bag snatching hotspot",
+            message: "Keep bags zipped in crowded night markets.",
+            severity: "medium"
+          }
+        ],
+        emergency: [
+          "Police: 191",
+          "Tourist Police: 1155",
+          "Ambulance & Fire: 199"
+        ],
+        cheats: [
+          "Use metered taxis or Grab; avoid 'special tour' offers.",
+          "Keep drinks in sight in nightlife areas.",
+          "Carry a photocopy of your passport, not the original."
+        ],
+        microReports: [
+          {
+            text: "Overpriced boat tours being pushed near the river piers.",
+            timestamp: Date.now() - 1000 * 60 * 60 * 6
+          }
+        ]
+      },
+      {
+        id: "paris-fr",
+        city: "Paris",
+        country: "France",
+        riskScore: 48,
+        lat: 48.8566,
+        lng: 2.3522,
+        dailyBrief: [
+          "Pickpocketing remains common in metro line to tourist areas.",
+          "Occasional demonstrations may block main boulevards.",
+          "Avoid signing 'petitions' or ‘friendship bracelets’ around monuments."
+        ],
+        alerts: [
+          {
+            id: "al4",
+            type: "scam",
+            title: "Friendship bracelet scam",
+            message: "Vendors near Sacré-Cœur may force bracelets on wrists.",
+            severity: "medium"
+          },
+          {
+            id: "al5",
+            type: "unrest",
+            title: "Planned demonstration",
+            message: "Protest scheduled at République after 5pm.",
+            severity: "medium"
+          }
+        ],
+        emergency: [
+          "Emergency services (EU): 112",
+          "Police: 17",
+          "Ambulance: 15"
+        ],
+        cheats: [
+          "Keep valuables in a money belt in crowded metros.",
+          "Be cautious with unsolicited 'surveys' or 'sign-ups.'",
+          "Check official transport announcements during protests."
+        ],
+        microReports: []
+      },
+      {
+        id: "mexico-city-mx",
+        city: "Mexico City",
+        country: "Mexico",
+        riskScore: 71,
+        lat: 19.4326,
+        lng: -99.1332,
+        dailyBrief: [
+          "Stay in well-reviewed neighborhoods and avoid wandering late at night.",
+          "Use ride-share apps over street taxis.",
+          "Avoid flashing jewelry or expensive electronics."
+        ],
+        alerts: [
+          {
+            id: "al6",
+            type: "crime",
+            title: "Phone snatches",
+            message: "Increased reports of phone grabs near popular plazas.",
+            severity: "high"
+          },
+          {
+            id: "al7",
+            type: "weather",
+            title: "Air quality advisory",
+            message: "Moderate smog levels; sensitive travelers take precautions.",
+            severity: "low"
+          }
+        ],
+        emergency: [
+          "Emergency: 911",
+          "Tourist assistance (Angeles Verdes): 078"
+        ],
+        cheats: [
+          "Use only official ATMs inside banks or malls.",
+          "Check with your accommodation about areas to avoid.",
+          "Arrange transport through reputable apps at night."
+        ],
+        microReports: []
+      }
+    ];
+
+    let destinations = JSON.parse(JSON.stringify(demoDestinations));
+    let currentDestinationId = destinations[0].id;
+    let notificationToggles = {
+      weather: true,
+      unrest: true,
+      crime: true,
+      scam: true
+    };
+    let offlineMode = false;
+    let map, markersLayer, routeLayer;
+
+    // ------------------ UTILITIES ------------------
+
+    function getDestinationById(id) {
+      return destinations.find((d) => d.id === id);
+    }
+
+    function riskClass(score) {
+      if (score >= 70) return "risk-high";
+      if (score >= 40) return "risk-med";
+      return "risk-low";
+    }
+
+    function riskLabel(score) {
+      if (score >= 70) return "High";
+      if (score >= 40) return "Elevated";
+      return "Low";
+    }
+
+    function formatTimeShort(ts) {
+      const date = new Date(ts);
+      return date.toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    // ------------------ RENDERING: DASHBOARD ------------------
+
+    function renderDashboard() {
+      const dest = getDestinationById(currentDestinationId);
+      if (!dest) return;
+
+      const labelEl = document.getElementById("current-location-label");
+      const riskScoreEl = document.getElementById("current-risk-score");
+      const statusTextEl = document.getElementById("status-text");
+      const briefListEl = document.getElementById("daily-brief-list");
+      const alertsListEl = document.getElementById("active-alerts-list");
+      const chipRowEl = document.getElementById("chip-alert-types");
+
+      labelEl.textContent = `${dest.city}, ${dest.country}`;
+      riskScoreEl.textContent = dest.riskScore ?? "--";
+
+      statusTextEl.innerHTML = `<strong>${riskLabel(dest.riskScore)} risk</strong> · ${dest.dailyBrief[0] || ""}`;
+
+      briefListEl.innerHTML = "";
+      (dest.dailyBrief || []).forEach((line) => {
+        const li = document.createElement("li");
+        li.textContent = line;
+        briefListEl.appendChild(li);
+      });
+
+      alertsListEl.innerHTML = "";
+      const alerts = dest.alerts || [];
+      alerts.forEach((a) => {
+        const li = document.createElement("li");
+        const badgeSpan = document.createElement("span");
+        badgeSpan.className = `badge badge-${a.type || "scam"}`;
+        badgeSpan.textContent = a.type.toUpperCase();
+        const textSpan = document.createElement("span");
+        textSpan.textContent = ` ${a.title} — ${a.message}`;
+        li.textContent = "";
+        li.appendChild(badgeSpan);
+        li.appendChild(textSpan);
+        alertsListEl.appendChild(li);
+      });
+
+      // chips for categories
+      chipRowEl.innerHTML = "";
+      const types = ["weather", "unrest", "crime", "scam"];
+      const labels = {
+        weather: "Weather",
+        unrest: "Unrest",
+        crime: "Crime",
+        scam: "Scams"
+      };
+      types.forEach((t) => {
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        const dot = document.createElement("div");
+        dot.className = "chip-dot";
+        chip.appendChild(dot);
+        const span = document.createElement("span");
+        span.textContent = `${labels[t]} ${notificationToggles[t] ? "on" : "off"}`;
+        chip.appendChild(span);
+        chipRowEl.appendChild(chip);
+      });
+
+      // populate destination select
+      const select = document.getElementById("select-current-destination");
+      select.innerHTML = "";
+      destinations.forEach((d) => {
+        const option = document.createElement("option");
+        option.value = d.id;
+        option.textContent = `${d.city}, ${d.country}`;
+        if (d.id === currentDestinationId) option.selected = true;
+        select.appendChild(option);
+      });
+    }
+
+    // ------------------ RENDERING: DESTINATIONS LIST + DETAIL ------------------
+
+    function renderDestinationsList() {
+      const container = document.getElementById("destinations-list");
+      container.innerHTML = "";
+      destinations.forEach((d) => {
+        const card = document.createElement("div");
+        card.className = "dest-card";
+
+        const header = document.createElement("div");
+        header.className = "dest-header";
+
+        const nameWrap = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "dest-name";
+        name.textContent = d.city;
+        const country = document.createElement("div");
+        country.className = "dest-country";
+        country.textContent = d.country;
+        nameWrap.appendChild(name);
+        nameWrap.appendChild(country);
+
+        const right = document.createElement("div");
+        right.className = "flex-row";
+        const risk = document.createElement("span");
+        risk.className = `tag-pill ${riskClass(d.riskScore)}`;
+        risk.textContent = `${riskLabel(d.riskScore)} · ${d.riskScore}`;
+        right.appendChild(risk);
+
+        const favBtn = document.createElement("button");
+        favBtn.className = "btn btn-sm btn-ghost";
+        favBtn.textContent = "Set current";
+        favBtn.addEventListener("click", () => {
+          currentDestinationId = d.id;
+          renderDashboard();
+        });
+        right.appendChild(favBtn);
+
+        header.appendChild(nameWrap);
+        header.appendChild(right);
+
+        const body = document.createElement("div");
+        body.className = "text-subtle";
+        body.textContent = d.dailyBrief[0] || "No brief yet.";
+
+        const actions = document.createElement("div");
+        actions.className = "flex-row";
+        actions.style.marginTop = "4px";
+
+        const detailBtn = document.createElement("button");
+        detailBtn.className = "btn btn-sm btn-ghost";
+        detailBtn.textContent = "View detail";
+        detailBtn.addEventListener("click", () => showDestinationDetail(d.id));
+
+        actions.appendChild(detailBtn);
+
+        card.appendChild(header);
+        card.appendChild(body);
+        card.appendChild(actions);
+
+        container.appendChild(card);
+      });
+
+      // re-populate route selects
+      populateRouteSelects();
+    }
+
+    function showDestinationDetail(id) {
+      const dest = getDestinationById(id);
+      if (!dest) return;
+      currentDestinationId = id; // keep in sync
+
+      const card = document.getElementById("destination-detail-card");
+      card.style.display = "block";
+
+      document.getElementById("detail-title").textContent = `${dest.city}, ${dest.country}`;
+
+      const riskPill = document.getElementById("detail-risk-pill");
+      riskPill.className = `tag-pill ${riskClass(dest.riskScore)}`;
+      riskPill.textContent = `${riskLabel(dest.riskScore)} risk · ${dest.riskScore}`;
+
+      document.getElementById("detail-brief").textContent = dest.dailyBrief[0] || "";
+
+      const cheatsEl = document.getElementById("detail-cheats");
+      cheatsEl.innerHTML = "";
+      (dest.cheats || []).forEach((c) => {
+        const li = document.createElement("li");
+        li.textContent = c;
+        cheatsEl.appendChild(li);
+      });
+
+      const emEl = document.getElementById("detail-emergency");
+      emEl.innerHTML = "";
+      (dest.emergency || []).forEach((e) => {
+        const li = document.createElement("li");
+        li.textContent = e;
+        emEl.appendChild(li);
+      });
+
+      const mrContainer = document.getElementById("detail-micro-reports");
+      mrContainer.innerHTML = "";
+      (dest.microReports || []).forEach((r) => {
+        const div = document.createElement("div");
+        div.className = "micro-report";
+        const time = document.createElement("time");
+        time.textContent = formatTimeShort(r.timestamp);
+        const text = document.createElement("div");
+        text.textContent = r.text;
+        div.appendChild(time);
+        div.appendChild(text);
+        mrContainer.appendChild(div);
+      });
+
+      document.getElementById("input-micro-report").value = "";
+
+      // sync dashboard
+      renderDashboard();
+    }
+
+    // ------------------ MAP + ROUTE SAFETY ------------------
+
+    function initMap() {
+      const firstWithCoords = destinations.find((d) => d.lat && d.lng) || destinations[0];
+      map = L.map("map", { zoomControl: false }).setView(
+        [firstWithCoords.lat || 0, firstWithCoords.lng || 0],
+        3
+      );
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+
+      markersLayer = L.layerGroup().addTo(map);
+      routeLayer = L.layerGroup().addTo(map);
+
+      renderMapMarkers();
+    }
+
+    function renderMapMarkers() {
+      if (!markersLayer) return;
+      markersLayer.clearLayers();
+      destinations.forEach((d) => {
+        if (typeof d.lat === "number" && typeof d.lng === "number") {
+          const marker = L.marker([d.lat, d.lng]);
+          marker.bindPopup(
+            `<strong>${d.city}, ${d.country}</strong><br/>Risk: ${riskLabel(d.riskScore)} · ${d.riskScore}`
+          );
+          markersLayer.addLayer(marker);
+        }
+      });
+    }
+
+    function populateRouteSelects() {
+      const startSel = document.getElementById("route-start");
+      const endSel = document.getElementById("route-end");
+      if (!startSel || !endSel) return;
+      startSel.innerHTML = '<option value="">Start</option>';
+      endSel.innerHTML = '<option value="">End</option>';
+      destinations.forEach((d) => {
+        const opt1 = document.createElement("option");
+        opt1.value = d.id;
+        opt1.textContent = `${d.city}, ${d.country}`;
+        startSel.appendChild(opt1);
+        const opt2 = document.createElement("option");
+        opt2.value = d.id;
+        opt2.textContent = `${d.city}, ${d.country}`;
+        endSel.appendChild(opt2);
+      });
+    }
+
+    function checkRouteSafety(startId, endId) {
+      const start = getDestinationById(startId);
+      const end = getDestinationById(endId);
+      const summaryEl = document.getElementById("route-summary");
+      const badgeEl = document.getElementById("map-badge");
+
+      if (!start || !end) {
+        summaryEl.textContent = "Select valid start and end destinations.";
+        return;
+      }
+
+      const avgRisk = Math.round((start.riskScore + end.riskScore) / 2);
+      const label = riskLabel(avgRisk);
+      summaryEl.textContent = `Route between ${start.city} and ${end.city}: ${label} risk · ${avgRisk}. This is a simple heuristic based on city-level risk scores.`;
+
+      if (badgeEl) badgeEl.style.display = "block";
+
+      if (!routeLayer) return;
+      routeLayer.clearLayers();
+      if (
+        typeof start.lat === "number" &&
+        typeof start.lng === "number" &&
+        typeof end.lat === "number" &&
+        typeof end.lng === "number"
+      ) {
+        const line = L.polyline(
+          [
+            [start.lat, start.lng],
+            [end.lat, end.lng]
+          ],
+          { color: "#ffb400", weight: 3, opacity: 0.9 }
+        );
+        routeLayer.addLayer(line);
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+      }
+    }
+
+    // ------------------ TOAST / PSEUDO PUSH NOTIFICATIONS ------------------
+
+    function showToast(title, message) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-title").textContent = title;
+      document.getElementById("toast-body").textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => {
+        toast.classList.remove("visible");
+      }, 4500);
+    }
+
+    function randomAlertPing() {
+      const dest = getDestinationById(currentDestinationId);
+      if (!dest || !dest.alerts || dest.alerts.length === 0) return;
+      // Filter by toggles
+      const filtered = dest.alerts.filter((a) => notificationToggles[a.type] !== false);
+      if (filtered.length === 0) return;
+      const alert = filtered[Math.floor(Math.random() * filtered.length)];
+      showToast(`${alert.title}`, `${dest.city}: ${alert.message}`);
+    }
+
+    function scheduleRandomPings() {
+      setInterval(() => {
+        if (Math.random() < 0.5) {
+          randomAlertPing();
+        }
+      }, 15000); // every ~15 seconds
+    }
+
+    // ------------------ OFFLINE CACHE (LOCALSTORAGE) ------------------
+
+    const OFFLINE_KEY = "travel-safety-pings-demo";
+
+    function saveOfflineCache() {
+      try {
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(destinations));
+        offlineMode = true;
+        updateOfflineUI("Saved current demo data for offline use.");
+      } catch (e) {
+        console.error("Failed to save offline cache", e);
+        updateOfflineUI("Failed to save offline data.");
+      }
+    }
+
+    function loadOfflineCache() {
+      try {
+        const raw = localStorage.getItem(OFFLINE_KEY);
+        if (!raw) {
+          updateOfflineUI("Offline cache: none saved.");
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (offlineMode) {
+          destinations = parsed;
+        } else {
+          destinations = parsed.length ? parsed : clone(demoDestinations);
+        }
+        updateOfflineUI(
+          `Offline cache: ${parsed.length} destinations · ${
+            offlineMode ? "using offline data" : "offline available"
+          }.`
+        );
+      } catch (e) {
+        console.error("Failed to load offline cache", e);
+        updateOfflineUI("Offline cache error; using demo data.");
+        destinations = clone(demoDestinations);
+      }
+    }
+
+    function clearOfflineCache() {
+      try {
+        localStorage.removeItem(OFFLINE_KEY);
+      } catch (e) {
+        console.error("Failed to clear offline cache", e);
+      }
+      offlineMode = false;
+      destinations = clone(demoDestinations);
+      updateOfflineUI("Offline cache cleared. Using built-in demo data.");
+      renderDashboard();
+      renderDestinationsList();
+      renderMapMarkers();
+    }
+
+    function updateOfflineUI(text) {
+      const status = document.getElementById("offline-status");
+      if (status) status.textContent = text;
+      const toggle = document.getElementById("toggle-offline-mode");
+      if (toggle) {
+        if (offlineMode) toggle.classList.add("active");
+        else toggle.classList.remove("active");
+      }
+    }
+
+    // ------------------ NAVIGATION ------------------
+
+    function setupNav() {
+      const buttons = document.querySelectorAll(".nav-btn");
+      const screens = {
+        dashboard: document.getElementById("screen-dashboard"),
+        destinations: document.getElementById("screen-destinations"),
+        map: document.getElementById("screen-map"),
+        store: document.getElementById("screen-store"),
+        settings: document.getElementById("screen-settings")
+      };
+
+      function activate(target) {
+        buttons.forEach((btn) => {
+          const t = btn.getAttribute("data-target");
+          if (t === target) btn.classList.add("active");
+          else btn.classList.remove("active");
+        });
+        Object.entries(screens).forEach(([key, el]) => {
+          if (key === target) el.classList.add("active");
+          else el.classList.remove("active");
+        });
+
+        if (target === "map" && map) {
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 220);
+          const badgeEl = document.getElementById("map-badge");
+          if (badgeEl) badgeEl.style.display = "none";
+        }
+      }
+
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.getAttribute("data-target");
+          activate(target);
+        });
+      });
+
+      // quick action buttons
+      document.querySelectorAll("[data-nav]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const target = el.getAttribute("data-nav");
+          activate(target);
+        });
+      });
+    }
+
+    // ------------------ EVENT HANDLERS ------------------
+
+    function setupEventHandlers() {
+      // current destination change
+      document
+        .getElementById("select-current-destination")
+        .addEventListener("change", (e) => {
+          currentDestinationId = e.target.value;
+          renderDashboard();
+        });
+
+      // add destination
+      document.getElementById("btn-add-destination").addEventListener("click", () => {
+        const city = document.getElementById("input-city").value.trim();
+        const country = document.getElementById("input-country").value.trim();
+        const riskVal = document.getElementById("input-risk").value.trim();
+        const latVal = document.getElementById("input-lat").value.trim();
+        const lngVal = document.getElementById("input-lng").value.trim();
+
+        if (!city || !country) {
+          alert("City and country are required.");
+          return;
+        }
+
+        const id = `${city.toLowerCase().replace(/\s+/g, "-")}-${country
+          .toLowerCase()
+          .replace(/\s+/g, "-")}-${Date.now().toString(36)}`;
+
+        const newDest = {
+          id,
+          city,
+          country,
+          riskScore: riskVal ? Math.max(0, Math.min(100, parseInt(riskVal, 10))) : 35,
+          lat: latVal ? parseFloat(latVal) : undefined,
+          lng: lngVal ? parseFloat(lngVal) : undefined,
+          dailyBrief: ["New destination added. Customize later."],
+          alerts: [],
+          emergency: ["Add emergency numbers later."],
+          cheats: ["Add your own cheat-sheet entries later."],
+          microReports: []
+        };
+
+        destinations.push(newDest);
+        document.getElementById("input-city").value = "";
+        document.getElementById("input-country").value = "";
+        document.getElementById("input-risk").value = "";
+        document.getElementById("input-lat").value = "";
+        document.getElementById("input-lng").value = "";
+
+        currentDestinationId = newDest.id;
+        renderDashboard();
+        renderDestinationsList();
+        renderMapMarkers();
+      });
+
+      // add micro report
+      document.getElementById("btn-add-micro-report").addEventListener("click", () => {
+        const text = document.getElementById("input-micro-report").value.trim();
+        if (!text) return;
+        const dest = getDestinationById(currentDestinationId);
+        if (!dest) return;
+        dest.microReports = dest.microReports || [];
+        dest.microReports.unshift({ text, timestamp: Date.now() });
+
+        document.getElementById("input-micro-report").value = "";
+        showDestinationDetail(currentDestinationId);
+      });
+
+      // route safety
+      document.getElementById("btn-check-route").addEventListener("click", () => {
+        const startId = document.getElementById("route-start").value;
+        const endId = document.getElementById("route-end").value;
+        checkRouteSafety(startId, endId);
+      });
+
+      // test alert
+      document.getElementById("btn-test-alert").addEventListener("click", () => {
+        randomAlertPing();
+      });
+
+      // notification toggles
+      document.querySelectorAll(".toggle[data-toggle]").forEach((el) => {
+        el.addEventListener("click", () => {
+          const type = el.getAttribute("data-toggle");
+          el.classList.toggle("active");
+          notificationToggles[type] = el.classList.contains("active");
+          renderDashboard();
+        });
+      });
+
+      // offline buttons
+      document.getElementById("btn-save-offline").addEventListener("click", () => {
+        saveOfflineCache();
+      });
+      document.getElementById("btn-clear-offline").addEventListener("click", () => {
+        clearOfflineCache();
+      });
+      document.getElementById("toggle-offline-mode").addEventListener("click", () => {
+        offlineMode = !offlineMode;
+        if (offlineMode) {
+          loadOfflineCache();
+        } else {
+          destinations = clone(demoDestinations);
+          updateOfflineUI("Offline mode disabled. Using built-in demo data.");
+        }
+        renderDashboard();
+        renderDestinationsList();
+        renderMapMarkers();
+      });
+    }
+
+    // ------------------ INIT ------------------
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // try load offline cache (doesn't flip offline mode by itself)
+      loadOfflineCache();
+
+      renderDashboard();
+      renderDestinationsList();
+      setupNav();
+      setupEventHandlers();
+      initMap();
+      populateRouteSelects();
+
+      // start pseudo push pings
+      scheduleRandomPings();
+    });
+  </script>
+</body>
+</html>
